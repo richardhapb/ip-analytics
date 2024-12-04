@@ -120,6 +120,9 @@ class IpData:
         try:
             response = requests.get(API_URL, headers=headers, params=params, timeout=10)
             data = response.json().get("data")
+            if data is None:
+                logging.info('Request data is None for ip %s, skipping', ip)
+                return
             self.data[ip]["pais"] = data.get("countryCode")
             self.data[ip]["dominio"] = data.get("domain")
             self.data[ip]["fecha_ult_reporte"] = data.get("lastReportedAt")

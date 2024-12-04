@@ -30,8 +30,10 @@ services:
     container_name: fluent-bit
     depends_on:
       - kafka
+    env_file:
+      - .env
     volumes:
-      - ./logs:/var/log
+      - ${NGINX_LOG_DIR}:/var/log
       - ./conf:/fluent-bit/etc
     ports:
       - "2020:2020"
@@ -59,6 +61,23 @@ services:
     image: dbeaver/cloudbeaver:latest
     ports:
       - "8978:8978"
+
+  ipanalytics:
+    container_name: ip_analytics
+    build: .
+    image: ip-analytics
+    depends_on:
+      - kafka
+      - postgres
+    volumes:
+      - .:/app
+    command: "gunicorn --workers 2 --bind 0.0.0.0:3000 main:app -k gevent"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres-data:

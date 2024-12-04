@@ -7,7 +7,7 @@ import logging
 
 from flask import Flask, jsonify, request
 from kafka import KafkaConsumer
-from kafka.errors import UnrecognizedBrokerVersion
+from kafka.errors import UnrecognizedBrokerVersion, NoBrokersAvailable
 from dotenv import load_dotenv
 
 from ip_model import IpData
@@ -42,12 +42,12 @@ class KafkaInstance:
         try:
             self.consumer = KafkaConsumer(
                 group_id="local-group",
-                bootstrap_servers=["127.0.0.1:29092"],
+                bootstrap_servers=["kafka:9092"],
                 value_deserializer=lambda x: json.loads(x.decode("utf-8")),
                 enable_auto_commit=True,
             )
             self.consumer.subscribe(topics=["ip_analytics"])
-        except UnrecognizedBrokerVersion:
+        except (UnrecognizedBrokerVersion, NoBrokersAvailable):
             logging.error("Unrecognized broker version, Kafka is running?")
 
         return self.consumer
