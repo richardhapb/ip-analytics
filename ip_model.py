@@ -1,3 +1,7 @@
+"""
+Handle the model for ip data and Database requests
+"""
+
 import os
 import logging
 from functools import wraps
@@ -16,6 +20,17 @@ API_KEY = os.getenv("ABUSEIPDB_API_KEY")
 
 
 def db_connection(func):
+    """
+    Decorator that handle the database connection
+    This function verifies if connection exists, handle errors and rollback
+
+    Args:
+    :param func: Decorated function
+
+    Returns:
+        Return function: decorated function
+    """
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if self.db_conn is None or self.db_conn.closed:
@@ -41,6 +56,10 @@ def db_connection(func):
 
 
 class IpData:
+    """
+    Main class that handle the ip database, connection, data setters and getters. Handle the api actions.
+    """
+
     IP_ANALISIS_STRUCTURE = [
         "ip",
         "pais",
@@ -60,6 +79,17 @@ class IpData:
         return self.data
 
     def insert_ip(self, ip: str, timestamp: int, ruta: str) -> None:
+        """
+        Insert a new ip to the local database
+
+        Args:
+        :param ip: str: The ip direction for storage
+        :param timestamp: int: Timestamp in seconds of the ip request
+        :param ruta: str: Path of ip request
+
+        Returns:
+            Return None
+        """
         if ip not in self.data:
             self.data[ip] = {}
             self.request_ip_info(ip)
@@ -69,7 +99,16 @@ class IpData:
 
         self.solicitudes[ip].append((timestamp, ruta))
 
-    def request_ip_info(self, ip: str):
+    def request_ip_info(self, ip: str) -> None:
+        """
+        Request the information of ip from public api
+
+        Args:
+        :param ip: str: Ip direction for request
+
+        Returns:
+            Return None
+        """
         if not API_URL:
             return
 
@@ -96,7 +135,15 @@ class IpData:
             logging.error("Error inserting data to the model: %s", e)
 
     @db_connection
-    def insert_to_db(self):
+    def insert_to_db(self) -> None:
+        """
+        Insert the current local data to database
+
+        Args:
+            No parameters
+        Returns:
+            Return None
+        """
         if not self.data:
             logging.warning("The ips list is empty, cannot insert in database")
             return
@@ -150,6 +197,14 @@ class IpData:
 
     @db_connection
     def fetch_ips_from_db(self) -> dict[str, dict]:
+        """
+        Update in-memory current local data from the SQL database
+
+        Args:
+            No parameters
+        Returns:
+            Return dict[str, dict]: The dict with the ips data
+        """
         query = (
             "SELECT "
             + ",".join(IpData.IP_ANALISIS_STRUCTURE)
@@ -174,6 +229,13 @@ class IpData:
 
     @db_connection
     def fetch_ip_data(self, ip: str) -> list:
+        """
+        Update in-memory current local 'solicitudes' data from de SQL database to specific ip
+        Args:
+        :param ip: str: Ip for request to database
+        Returns:
+            Return list: A list of tuples (timestamp, path) for the ip
+        """
         query = (
             "SELECT "
             + ", ".join(IpData.SOLICITUDES_STRUCTURE)

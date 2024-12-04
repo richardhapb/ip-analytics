@@ -1,3 +1,7 @@
+"""
+Main API module, handle the api requests and kafka messages
+"""
+
 import json
 import logging
 
@@ -18,10 +22,21 @@ logging.basicConfig(level=logging.INFO)
 
 
 class KafkaInstance:
+    """
+    Handle the connection with the Kafka daemon
+    """
+
     def __init__(self):
         self.consumer = None
 
-    def connect_to_kafka(self):
+    def connect_to_kafka(self) -> KafkaConsumer | None:
+        """
+        Connect to Kafka topic for consume the requests data
+        Args:
+            No parameters
+        Returns:
+            Return KafkaConsumer | None: The consumer instance or none if not connected
+        """
         if self.consumer is not None:
             return self.consumer
         try:
@@ -38,12 +53,21 @@ class KafkaInstance:
         return self.consumer
 
 
+# Connect to Kafka topic
 kafka_instance = KafkaInstance()
 kafka_instance.connect_to_kafka()
 
 
 @app.route("/connect_to_kafka")
 def connect_kafka():
+    """
+    Allow to user to conenct manually to Kafka
+
+    Args:
+        No parameters
+    Returns:
+        Return a json with the status message
+    """
     kafka_instance.connect_to_kafka()
 
     if kafka_instance.consumer is None:
@@ -54,6 +78,14 @@ def connect_kafka():
 
 @app.route("/update_ips")
 def update_ips():
+    """
+    Update the requests data from Kafka topic
+
+    Args:
+        No parameters.
+    Returns:
+        Return a json with the status message
+    """
     if kafka_instance.consumer is None:
         kafka_instance.connect_to_kafka()
         if kafka_instance.consumer is None:
@@ -88,11 +120,27 @@ def update_ips():
 
 @app.route("/get_data")
 def get_data():
+    """
+    Return the in-memory data
+
+    Args:
+        No parameters.
+    Returns:
+        Return a json with the data
+    """
     return jsonify({"data": ip_data.data}), 200
 
 
 @app.route("/fetch_data_from_db")
 def fetch_data_from_db():
+    """
+    Fetcha data to SQL database and return the result
+
+    Args:
+        No parameters.
+    Returns:
+        Return json with the data or an error message if cannot fetch data
+    """
     try:
         ip_data.fetch_ips_from_db()
     except Exception as e:
@@ -103,6 +151,15 @@ def fetch_data_from_db():
 
 @app.route("/get_ip_requests")
 def get_ip_requests():
+    """
+    Get te requests info from in-memory data or database
+
+    URL Params:
+        ip: The direction ip for the request (required)
+        from_db: true if require fetch to database
+    Returns:
+        Return a json with data or an error message if cannot fetch data
+    """
     ip = request.args.get("ip")
     from_db = request.args.get("from_db")
 
@@ -124,4 +181,4 @@ def get_ip_requests():
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 3001, True)
+    app.run("0.0.0.0", 3000, True)
