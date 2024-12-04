@@ -3,11 +3,14 @@ import json
 import logging
 import os
 
+from flask import Flask
 from kafka import KafkaConsumer
 import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv()
+
+app = Flask(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
