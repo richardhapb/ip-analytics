@@ -1,14 +1,11 @@
 /* eslint-disable no-undef */
 /** @type {import('tailwindcss').Config} */
-
 // (Optional) Import default theme when using a custom font (Step 7)
 //import defaultTheme from 'tailwindcss/defaultTheme';
-
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
-        
       keyframes: {
         hide: {
           from: { opacity: "1" },
@@ -51,14 +48,6 @@ export default {
           },
           to: { opacity: "1", transform: "translate(-50%, -50%) scale(1)" },
         },
-        drawerSlideLeftAndFade: {
-          from: { opacity: "0", transform: "translateX(100%)" },
-          to: { opacity: "1", transform: "translateX(0)" },
-        },
-        drawerSlideRightAndFade: {
-          from: { opacity: "1", transform: "translateX(0)" },
-          to: { opacity: "0", transform: "translateX(100%)" },
-        },
       },
       animation: {
         hide: "hide 150ms cubic-bezier(0.16, 1, 0.3, 1)",
@@ -77,10 +66,6 @@ export default {
           "dialogOverlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)",
         dialogContentShow:
           "dialogContentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)",
-        // Drawer
-        drawerSlideLeftAndFade:
-        "drawerSlideLeftAndFade 150ms cubic-bezier(0.16, 1, 0.3, 1)",
-        drawerSlideRightAndFade: "drawerSlideRightAndFade 150ms ease-in",
       },
     },
   },

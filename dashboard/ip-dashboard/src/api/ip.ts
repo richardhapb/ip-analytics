@@ -1,4 +1,4 @@
-import axios from "@/api/axios"
+import axios from "./axios"
 
 export const getIpsData = async () => {
     const response = await axios.get('/get_data')

@@ -1,19 +1,18 @@
-# Etapa 1: construir la aplicación React
-FROM node:20
+FROM node:20 AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=prod
+RUN npm install
 
 COPY . .
 
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginx
 
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 

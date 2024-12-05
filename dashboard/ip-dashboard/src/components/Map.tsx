@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { IpData, Requests } from '@/types/models';
-import { getCountryInfo } from '@/api/countries';
-import Worldmap from "@/components/assets/Worldmap"
+import { IpData, Requests } from '../types/models';
+import { getCountryInfo } from '../api/countries';
+import Worldmap from "../components/assets/Worldmap"
 
 interface CountryRequestData {
   country: string;

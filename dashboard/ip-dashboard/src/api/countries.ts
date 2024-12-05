@@ -1,4 +1,4 @@
-import axios from "@/api/axios"
+import axios from "../api/axios"
 
 const API_URL = "https://restcountries.com/v3.1/alpha"
 

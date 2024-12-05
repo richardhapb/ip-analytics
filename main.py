@@ -47,6 +47,7 @@ class KafkaInstance:
                 bootstrap_servers=["kafka:9092"],
                 value_deserializer=lambda x: json.loads(x.decode("utf-8")),
                 enable_auto_commit=True,
+                session_timeout_ms=40000,
             )
             self.consumer.subscribe(topics=["ip_analytics"])
         except (UnrecognizedBrokerVersion, NoBrokersAvailable):
@@ -88,18 +89,18 @@ def update_ips():
     Returns:
         Return a json with the status message
     """
+    ip_data.fetch_ips_from_db()
+
     if kafka_instance.consumer is None:
         kafka_instance.connect_to_kafka()
         if kafka_instance.consumer is None:
             return jsonify(
                 {"msg": "Unrecognized broker version, Kafka is running?"}, 400
             )
-    timeout_ms = 5000
+    timeout_ms = 1000
     count = 0
-    while True:
-        messages = kafka_instance.consumer.poll(timeout_ms=timeout_ms)
-        if not messages:
-            break
+    messages = kafka_instance.consumer.poll(timeout_ms=timeout_ms)
+    if messages:
 
         for _, message_batch in messages.items():
             for msg in message_batch:
@@ -111,13 +112,13 @@ def update_ips():
                     logging.info("IP: %s, Timestamp: %s", ip, timestamp)
                     ip_data.insert_ip(ip, timestamp, ruta)
 
-    try:
-        ip_data.insert_to_db()
-    except Exception as e:
-        logging.error("Error: %s", e)
-        return jsonify({"msg": "Error inserting data in database"}), 500
+        try:
+            ip_data.insert_to_db()
+        except Exception as e:
+            logging.error("Error: %s", e)
+            return jsonify({"msg": "Error inserting data in database"}), 500
 
-    return jsonify({"msg": f"{count} ips updated"}), 200
+    return jsonify({"data": ip_data.data, "msg": f"{count} ips updated"}), 200
 
 
 @app.route("/get_data")

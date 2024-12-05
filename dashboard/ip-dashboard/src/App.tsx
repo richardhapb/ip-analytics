@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from 'react'
 import './App.css'
-import Main from "@/pages/Main"
+import Main from "./pages/Main"
 
 function App() {
 

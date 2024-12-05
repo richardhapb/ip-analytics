@@ -1,5 +1,5 @@
 // Tremor AreaChart [v0.3.1]
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable typescript-eslint/no-explicit-any */
 
 "use client"
 
@@ -27,9 +27,9 @@ import {
   getColorClassName,
   getYAxisDomain,
   hasOnlyOneValueForKey,
-} from "@/lib/charUtils"
-import { useOnWindowResize } from "@/hooks/useOnWindowResize"
-import { cx } from "@/lib/utils"
+} from "../lib/charUtils"
+import { useOnWindowResize } from "../hooks/useOnWindowResize"
+import { cx } from "../lib/utils"
 
 //#region Legend
 

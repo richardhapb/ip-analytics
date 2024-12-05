@@ -1,9 +1,9 @@
 "use client"
 
-import { AreaChart } from "@/components/AreaChart"
-import { fetchIps, fetchRequests } from "@/api/ip"
-import { groupByHour } from "@/lib/helpers"
-import Map from "@/components/Map"
+import { AreaChart } from "../components/AreaChart"
+import { fetchRequests, updateIps, fetchIps } from "../api/ip"
+import { groupByHour } from "../lib/helpers"
+import Map from "../components/Map"
 import {
   Table,
   TableBody,
@@ -13,8 +13,10 @@ import {
   TableHeaderCell,
   TableRoot,
   TableRow,
-} from "@/components/Table"
+} from "../components/Table"
 import { useState, useEffect } from "react"
+
+import type { Requests } from "../types/models"
 
 interface IpData {
   [ip: string]: {
@@ -32,12 +34,24 @@ const RequestsChart = () => {
   const [sortedByHour, setSortedByHour] = useState<any[]>([])
   const [filter, setFilter] = useState("Todo")
   const [filteredIps, setFilteredIps] = useState<IpData>({})
+  const [firstRequest, setFirstRequest] = useState(true)
+
 
   // Initial fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const ipsResponse = await fetchIps()
+        let ipsResponse = {data:{}}
+        if (firstRequest){
+           ipsResponse = await fetchIps()
+           if(Object.keys(ipsResponse.data).length === 0) {
+               ipsResponse = await updateIps()
+           }
+           setFirstRequest(false)
+        }
+        else {
+           ipsResponse = await updateIps()
+        }
         const requestsResponse = await fetchRequests()
 
         const ips = ipsResponse.data
@@ -69,7 +83,15 @@ const RequestsChart = () => {
       }
     }
 
+    // Get initial data and update each 10 seconds
+
     fetchData()
+
+    const interval = setInterval(() => {
+        fetchData()
+    }, 10000)
+
+    return () => clearInterval(interval)
   }, [])
 
   // Filter by status
@@ -89,8 +111,9 @@ const RequestsChart = () => {
 
   return (
     <div className="flex flex-col gap-16">
-      <h1 className="text-4xl my-0">Visualiación de logs visitas página web</h1>
+      <h1 className="text-4xl my-0">Visualización de logs visitas página web</h1>
       <p className="text-xs text-gray italic">Todas las clasificaciones vienen determinadas por el número de reportes en página abuseipdb.com</p>
+      {firstRequest && <h1 className="text-4xl text-center">Cargando datos...</h1> }
       <h2 className="text-3xl">Solicitudes por hora</h2>
       <div className="flex flex-col gap-4">
         <AreaChart
@@ -153,7 +176,7 @@ const RequestsChart = () => {
           </Table>
         </TableRoot>
       </div>
-      <Map ipData={filteredIps} requestData={requests} />
+      <Map ipData={filteredIps} requestData={requests as unknown as Requests} />
     </div>
   )
 }
