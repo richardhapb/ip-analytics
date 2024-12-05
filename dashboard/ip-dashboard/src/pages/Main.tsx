@@ -1,7 +1,7 @@
 "use client"
 
 import { AreaChart } from "@/components/AreaChart"
-import {fetchIps, fetchRequests } from "@/api/ip"
+import { fetchIps, fetchRequests } from "@/api/ip"
 import { groupByHour } from "@/lib/helpers"
 import Map from "@/components/Map"
 import {
@@ -14,96 +14,146 @@ import {
   TableRoot,
   TableRow,
 } from "@/components/Table"
+import { useState, useEffect } from "react"
 
 interface IpData {
-    [ip: string]: {
+  [ip: string]: {
     dominio: string,
     estado: string,
     fecha_ult_reporte: string,
     pais: string,
     reportes_totales: number
-    }
+  }
 }
 
-let response = await fetchIps()
-const ipsData : IpData = response.data
-response = await fetchRequests()
-const requests = response.data
-
-const byHour = groupByHour(requests)
-
-const sortedByHour = Object.entries(byHour)
-  .sort((hourA, hourB) => {
-     const [dateA, hour2A] = hourA[1].hour.split('T')
-     const [dateB, hour2B] = hourB[1].hour.split('T')
-
-     const hourAInt = parseInt(hour2A, 10)
-     const hourBInt = parseInt(hour2B, 10)
-
-     const dateComparasion = dateA.localeCompare(dateB)
-     if (dateComparasion !== 0) {
-         return dateComparasion
-     }
-
-     return hourAInt - hourBInt
-  }).map(item => item[1])
-
 const RequestsChart = () => {
-  const types: Array<"default" | "stacked" | "percent"> = [
-    "default",
-    "stacked",
-    "percent",
-  ]
+  const [ipsData, setIpsData] = useState<IpData>({})
+  const [requests, setRequests] = useState<any[]>([])
+  const [sortedByHour, setSortedByHour] = useState<any[]>([])
+  const [filter, setFilter] = useState("Todo")
+  const [filteredIps, setFilteredIps] = useState<IpData>({})
+
+  // Initial fetch
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const ipsResponse = await fetchIps()
+        const requestsResponse = await fetchRequests()
+
+        const ips = ipsResponse.data
+        const reqs = requestsResponse.data
+        setIpsData(ips)
+        setRequests(reqs)
+
+        const byHour = groupByHour(reqs)
+        const sorted = Object.entries(byHour)
+          .sort((hourA, hourB) => {
+            const [dateA, hour2A] = hourA[1].hour.split('T')
+            const [dateB, hour2B] = hourB[1].hour.split('T')
+
+            const hourAInt = parseInt(hour2A, 10)
+            const hourBInt = parseInt(hour2B, 10)
+
+            const dateComparasion = dateA.localeCompare(dateB)
+            if (dateComparasion !== 0) {
+              return dateComparasion
+            }
+
+            return hourAInt - hourBInt
+          }).map(item => item[1])
+
+        setSortedByHour(sorted)
+        setFilteredIps(ips) 
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Filter by status
+  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedFilter = event.target.value
+    setFilter(selectedFilter)
+
+    if (selectedFilter === "Todo") {
+      setFilteredIps(ipsData) 
+    } else {
+      const filteredData = Object.fromEntries(
+        Object.entries(ipsData).filter(([_, values]) => values.estado === selectedFilter)
+      )
+      setFilteredIps(filteredData) 
+    }
+  }
 
   return (
-        <div className="flex flex-col gap-16">
-            <h2 className="text-3xl">Solicitudes por hora</h2>
-            <div className="flex flex-col gap-4">
-              <AreaChart
-                key={0}
-                type={types[0]}
-                className="h-72"
-                data={sortedByHour}
-                index="hour"
-                categories={["requests"]}
-                showLegend={false}
-              />
-            </div>
-            <h2 className="text-3xl">IPs detectadas</h2>
-          <div className="overflow-auto max-h-96">
-            <TableRoot>
-              <Table>
-                <TableCaption>IPs detectadas</TableCaption>
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>IP</TableHeaderCell>
-                    <TableHeaderCell>Dominio</TableHeaderCell>
-                    <TableHeaderCell>País</TableHeaderCell>
-                    <TableHeaderCell>Último reporte</TableHeaderCell>
-                    <TableHeaderCell>Reportes totales</TableHeaderCell>
-                    <TableHeaderCell>Estado</TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(ipsData).map(([ip, values]) => (
-                    <TableRow key={ip}>
-                      <TableCell>{ip}</TableCell>
-                      <TableCell>{values.dominio}</TableCell>
-                      <TableCell>{values.pais}</TableCell>
-                      <TableCell>{values.fecha_ult_reporte}</TableCell>
-                      <TableCell>{values.reportes_totales}</TableCell>
-                      <TableCell
-                        className={
-                          values.estado === "Maliciosa" ? "dark:text-red-500 font-bold" : ""
-                        }
-                      >{values.estado}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableRoot>
-        </div>
-        <Map ipData={ipsData} requestData={requests} />
+    <div className="flex flex-col gap-16">
+      <h1 className="text-4xl my-0">Visualiación de logs visitas página web</h1>
+      <p className="text-xs text-gray italic">Todas las clasificaciones vienen determinadas por el número de reportes en página abuseipdb.com</p>
+      <h2 className="text-3xl">Solicitudes por hora</h2>
+      <div className="flex flex-col gap-4">
+        <AreaChart
+          key={0}
+          type="default"
+          className="h-72"
+          data={sortedByHour}
+          index="hour"
+          categories={["requests"]}
+          showLegend={false}
+        />
+      </div>
+      <h2 className="text-3xl">IPs detectadas</h2>
+      <div className="mb-4">
+        <label htmlFor="filter" className="block text-lg mb-2">Filtrar por estado:</label>
+        <select
+          id="filter"
+          value={filter}
+          onChange={handleFilterChange}
+          className="p-2 border border-gray-300 rounded text-black min-w-40"
+        >
+          <option value="Todo">Todo</option>
+          <option value="Confiable">Confiable</option>
+          <option value="Sospechosa">Sospechosa</option>
+          <option value="Maliciosa">Maliciosa</option>
+        </select>
+      </div>
+      <div className="overflow-auto max-h-96">
+        <TableRoot>
+          <Table>
+            <TableCaption>IPs detectadas</TableCaption>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>IP</TableHeaderCell>
+                <TableHeaderCell>Dominio</TableHeaderCell>
+                <TableHeaderCell>País</TableHeaderCell>
+                <TableHeaderCell>Último reporte</TableHeaderCell>
+                <TableHeaderCell>Reportes totales</TableHeaderCell>
+                <TableHeaderCell>Estado</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.entries(filteredIps).map(([ip, values]) => (
+                <TableRow key={ip}>
+                  <TableCell>{ip}</TableCell>
+                  <TableCell>{values.dominio}</TableCell>
+                  <TableCell>{values.pais}</TableCell>
+                  <TableCell>{values.fecha_ult_reporte}</TableCell>
+                  <TableCell>{values.reportes_totales}</TableCell>
+                  <TableCell
+                    className={
+                      values.estado === "Maliciosa" ? "dark:text-red-500 font-bold" : ""
+                    }
+                  >
+                    {values.estado}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableRoot>
+      </div>
+      <Map ipData={filteredIps} requestData={requests} />
     </div>
   )
 }
