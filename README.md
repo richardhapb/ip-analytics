@@ -4,7 +4,6 @@
 <br />
 <div align="center">
   <h3 align="center">Pipeline y gestión de solicitudes HTTP en streaming</h3>
-
   <p align="center">
     Una aplicación para monitorear logs de Nginx
   </p>
@@ -38,8 +37,9 @@
 <!-- ABOUT THE PROJECT -->
 ## Acerca de este proyecto
 <div align="center">
-![ScreenRecording2024-12-05at09 12 42-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/37840bec-f2a2-4f5b-86c7-fa96dedde403)
+<img src="https://github.com/user-attachments/assets/c4047986-75ce-4f7e-ae32-063837d16249" />
 </div>
+<br />
 
 En cada página web existe una gran cantidad de solicitudes realizadas por software malicioso que intenta obtener información confidencial o acceso a nuestro sistema. Este proyecto busca generar insights relevantes para poder gestionar las ips que se conectan a nuestra página web, con lo cual podemos tomar la decisión de bloquearlas o generar alguna otra acción personalizada. La ventaja de este enfoque es que el backend y el frontend son independientes y también las diferentes herramientas utilizadas, las cuales se quedan en su totalidad en contenedores Docker para facilitar el despliegue.
 
