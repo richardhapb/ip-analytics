@@ -40,6 +40,7 @@ const RequestsChart = () => {
   // Initial fetch and updating
   useEffect(() => {
     const fetchData = async () => {
+      const currentFilter = filter
       try {
         let ipsResponse = {data:{}}
         if (firstRequest){
@@ -52,13 +53,19 @@ const RequestsChart = () => {
         }
         else {
            ipsResponse = await updateIps()
+
         }
         const requestsResponse = await fetchRequests()
 
         const ips = ipsResponse.data
         const reqs = requestsResponse.data
+
         setIpsData(ips)
         setRequests(reqs)
+
+        if(!firstRequest) {
+            handleFilter(currentFilter)
+        }
 
         const byHour = groupByHour(reqs)
         const sorted = Object.entries(byHour)
@@ -94,20 +101,24 @@ const RequestsChart = () => {
     return () => clearInterval(interval)
   }, [])
 
+  const handleFilter = (selectedFilter: string) => {
+        if (selectedFilter === "Todo") {
+          setFilteredIps(ipsData) 
+        } else {
+          const filteredData = Object.fromEntries(
+            Object.entries(ipsData).filter(([_, values]) => values.estado === selectedFilter)
+          )
+          setFilteredIps(filteredData) 
+      }
+  }
 
   // Filter by status
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedFilter = event.target.value
     setFilter(selectedFilter)
+    handleFilter(selectedFilter)
 
-    if (selectedFilter === "Todo") {
-      setFilteredIps(ipsData) 
-    } else {
-      const filteredData = Object.fromEntries(
-        Object.entries(ipsData).filter(([_, values]) => values.estado === selectedFilter)
-      )
-      setFilteredIps(filteredData) 
-    }
+    
   }
 
   return (
