@@ -38,7 +38,8 @@
 <!-- ABOUT THE PROJECT -->
 ## Acerca de este proyecto
 
-![](https://richardhapb.s3.us-east-2.amazonaws.com/resources/2024-12-04-09-28-09.gif)
+![ScreenRecording2024-12-05at09 12 42-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/37840bec-f2a2-4f5b-86c7-fa96dedde403)
+
 
 En cada página web existe una gran cantidad de solicitudes realizadas por software malicioso que intenta obtener información confidencial o acceso a nuestro sistema. Este proyecto busca generar insights relevantes para poder gestionar las ips que se conectan a nuestra página web, con lo cual podemos tomar la decisión de bloquearlas o generar alguna otra acción personalizada. La ventaja de este enfoque es que el backend y el frontend son independientes y también las diferentes herramientas utilizadas, las cuales se quedan en su totalidad en contenedores Docker para facilitar el despliegue.
 
