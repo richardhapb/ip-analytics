@@ -8,6 +8,7 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+        
       keyframes: {
         hide: {
           from: { opacity: "1" },

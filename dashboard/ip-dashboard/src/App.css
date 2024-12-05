@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  color:white;
 }
 
 .logo {
@@ -39,4 +40,12 @@
 
 .read-the-docs {
   color: #888;
+}
+
+svg path:hover {
+    fill: #800;
+}
+
+svg {
+    fill: #ccc;
 }
