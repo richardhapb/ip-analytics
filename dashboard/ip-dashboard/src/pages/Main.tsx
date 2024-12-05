@@ -37,7 +37,7 @@ const RequestsChart = () => {
   const [firstRequest, setFirstRequest] = useState(true)
 
 
-  // Initial fetch
+  // Initial fetch and updating
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,6 +47,7 @@ const RequestsChart = () => {
            if(Object.keys(ipsResponse.data).length === 0) {
                ipsResponse = await updateIps()
            }
+           setFilteredIps(ipsResponse.data)
            setFirstRequest(false)
         }
         else {
@@ -77,7 +78,6 @@ const RequestsChart = () => {
           }).map(item => item[1])
 
         setSortedByHour(sorted)
-        setFilteredIps(ips) 
       } catch (error) {
         console.error("Error fetching data:", error)
       }
@@ -93,6 +93,7 @@ const RequestsChart = () => {
 
     return () => clearInterval(interval)
   }, [])
+
 
   // Filter by status
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
