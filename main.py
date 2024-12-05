@@ -4,7 +4,9 @@ Main API module, handle the api requests and kafka messages
 
 import json
 import logging
+import os
 
+from flask_cors import CORS
 from flask import Flask, jsonify, request
 from kafka import KafkaConsumer
 from kafka.errors import UnrecognizedBrokerVersion, NoBrokersAvailable
@@ -13,10 +15,10 @@ from dotenv import load_dotenv
 from ip_model import IpData
 
 load_dotenv()
-
 ip_data = IpData()
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": os.getenv("FRONTEND_URL")}})
 
 logging.basicConfig(level=logging.INFO)
 
@@ -131,6 +133,29 @@ def get_data():
     return jsonify({"data": ip_data.data}), 200
 
 
+@app.route("/get_ip_data")
+def get_ip_data():
+    """
+    Return only the requested ip data
+
+    Url Params:
+        ip: Ip to be requested
+    Returns:
+        Return dict: A dict with the data
+    """
+    ip = request.args.get("ip")
+
+    if ip is None:
+        return jsonify({"msg": "IP param is required"}), 400
+
+    try:
+        data = ip_data.data[ip]
+    except KeyError:
+        logging.error("The ip doesn't exist")
+        return jsonify({"msg": "P doesn't exist"}), 400
+    return data
+
+
 @app.route("/fetch_data_from_db")
 def fetch_data_from_db():
     """
@@ -147,6 +172,24 @@ def fetch_data_from_db():
         logging.error("Error: %s", e)
         return jsonify({"msg": "Error fetching data"}), 400
     return jsonify({"data": ip_data.data}), 200
+
+
+@app.route("/fetch_requests_from_db")
+def fetch_requests_from_db():
+    """
+    Fetcha requests data to SQL database and return the result
+
+    Args:
+        No parameters.
+    Returns:
+        Return json with the data or an error message if cannot fetch data
+    """
+    try:
+        ip_data.fetch_ips_requests()
+    except Exception as e:
+        logging.error("Error: %s", e)
+        return jsonify({"msg": "Error fetching data"}), 400
+    return jsonify({"data": ip_data.solicitudes}), 200
 
 
 @app.route("/get_ip_requests")

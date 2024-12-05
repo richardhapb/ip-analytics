@@ -231,6 +231,39 @@ class IpData:
         return self.data
 
     @db_connection
+    def fetch_ips_requests(self) -> dict[str, list]:
+        """
+        Fetcha all request data from SQL database
+        Args:
+            No parameters
+        Returns:
+            Return dict: Dict with ips and listed by tuple (timestamp, ruta)
+        """
+        query = (
+                "SELECT "
+                + ", ".join(IpData.SOLICITUDES_STRUCTURE)
+                + " FROM ip_analytics.solicitudes"
+                )
+
+        assert self.db_conn is not None, 'Database connection is empty'
+
+        cur = self.db_conn.cursor()
+
+        cur.execute(query)
+        sol_elements = cur.fetchall()
+        cur.close()
+
+        for element in sol_elements:
+            ip = element[1]
+            if ip not in self.solicitudes:
+                self.solicitudes[ip] = []
+
+            self.solicitudes[ip].append((element[0], element[2]))
+
+        return self.solicitudes
+
+
+    @db_connection
     def fetch_ip_data(self, ip: str) -> list:
         """
         Update in-memory current local 'solicitudes' data from de SQL database to specific ip
@@ -253,13 +286,12 @@ class IpData:
         cur = self.db_conn.cursor()
 
         cur.execute(query)
-
         sol_elements = cur.fetchall()
+        cur.close()
 
         self.solicitudes[ip] = []
 
         for element in sol_elements:
             self.solicitudes[ip].append((element[0], element[2]))
-        cur.close()
 
         return self.solicitudes[ip]
