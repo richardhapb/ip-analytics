@@ -123,6 +123,8 @@ Una vez generadas las variables de entorno podemos levantar la aplicación.
    ```
 Una vez cargue la aplicación estará escuchando en http://localhost:8082. Si tus registros de logs son muy extensos, probablemente tarde un poco al comienzo en cargar los datos a la base de datos, ya que tiene que consultar la API por cada ip.
 
+¡Además en el puerto 8978 tendrás CloudBeaver para administrar la base de datos! Encuéntralo en http://localhost:8978
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
