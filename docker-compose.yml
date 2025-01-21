@@ -1,39 +1,48 @@
+name: ip-analytics
 services:
 
   zookeeper:
     image: bitnami/zookeeper:3.9.0
-    container_name: zookeeper
     ports:
       - "2181:2181"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "zookeeper", "2181", "|", "grep", "imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - ipnet
 
   kafka:
     image: bitnami/kafka:3.9.0
-    container_name: kafka
     ports:
       - "9092:9092"
       - "29092:29092"
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       - ALLOW_PLAINTEXT_LISTENER=yes
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --list --bootstrap-server kafka:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - ipnet
 
   fluent-bit:
     image: fluent/fluent-bit
-    container_name: fluent-bit
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     env_file:
       - .env
     volumes:
@@ -45,7 +54,6 @@ services:
 
   postgres:
     image: postgres:17.2
-    container_name: postgres17
     restart: always
     env_file:
       - .env
@@ -58,12 +66,11 @@ services:
       - "${POSTGRES_HOST_PORT}:5432"
     volumes:
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-      - postgres-data:/var/lib/postgresql/data
+      - /opt/homebrew/var/postgresql@17:/var/lib/postgresql/data
     networks:
       - ipnet
 
   cloudbeaver:
-    container_name: cloudbeaver
     image: dbeaver/cloudbeaver:latest
     ports:
       - "8978:8978"
@@ -71,12 +78,13 @@ services:
       - ipnet
 
   ipanalytics:
-    container_name: ip_analytics
     build: .
     image: ip-analytics
     depends_on:
-      - kafka
-      - postgres
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_started
     volumes:
       - .:/app
     command: "gunicorn --workers 2 --bind 0.0.0.0:3000 main:app -k gevent"
@@ -90,7 +98,6 @@ services:
       - ipnet
     
   ipdashboard:
-    container_name: ip_analytics_dash
     build:
       context: ./dashboard/ip-dashboard
       dockerfile: Dockerfile
@@ -108,5 +115,3 @@ networks:
   ipnet:
     driver: bridge
 
-volumes:
-  postgres-data:

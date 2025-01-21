@@ -6,11 +6,11 @@ import json
 import logging
 import os
 
-from flask_cors import CORS
-from flask import Flask, jsonify, request
-from kafka import KafkaConsumer
-from kafka.errors import UnrecognizedBrokerVersion, NoBrokersAvailable
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from kafka import KafkaConsumer
+from kafka.errors import NoBrokersAvailable, UnrecognizedBrokerVersion
 
 from ip_model import IpData
 
@@ -89,19 +89,24 @@ def update_ips():
     Returns:
         Return a json with the status message
     """
+    logging.debug("Fetching IPs from DB")
     ip_data.fetch_ips_from_db()
 
     if kafka_instance.consumer is None:
+        logging.debug("Connecting to Kafka")
         kafka_instance.connect_to_kafka()
         if kafka_instance.consumer is None:
+            logging.error("Failed to connect to Kafka")
             return jsonify(
                 {"msg": "Unrecognized broker version, Kafka is running?"}, 400
             )
-    timeout_ms = 1000
+
+    timeout_ms = 4000
     count = 0
+    logging.debug("Polling messages from Kafka")
     messages = kafka_instance.consumer.poll(timeout_ms=timeout_ms)
     if messages:
-
+        logging.debug("Messages received from Kafka")
         for _, message_batch in messages.items():
             for msg in message_batch:
                 ip = msg.value.get("remote", None)
@@ -109,14 +114,17 @@ def update_ips():
                 ruta = msg.value.get("path", "")
                 if ip:
                     count += 1
-                    logging.info("IP: %s, Timestamp: %s", ip, timestamp)
+                    logging.debug("IP: %s, Timestamp: %s", ip, timestamp)
                     ip_data.insert_ip(ip, timestamp, ruta)
 
         try:
+            logging.debug("Inserting data to DB")
             ip_data.insert_to_db()
         except Exception as e:
-            logging.error("Error: %s", e)
+            logging.error("Error inserting data to DB: %s", e)
             return jsonify({"msg": "Error inserting data in database"}), 500
+    else:
+        logging.debug("No messages received from Kafka")
 
     return jsonify({"data": ip_data.data, "msg": f"{count} ips updated"}), 200
 
@@ -226,3 +234,4 @@ def get_ip_requests():
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 3000, True)
+

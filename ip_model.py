@@ -2,13 +2,13 @@
 Handle the model for ip data and Database requests
 """
 
-import os
 import logging
+import os
 from functools import wraps
 
+import psycopg2
 import requests
 from dotenv import load_dotenv
-import psycopg2
 from psycopg2.extensions import connection
 
 from config import DATABASE_CONFIG
@@ -128,6 +128,7 @@ class IpData:
             self.data[ip]["fecha_ult_reporte"] = data.get("lastReportedAt")
             total_reports = data.get("totalReports")
             self.data[ip]["reportes_totales"] = total_reports
+            logging.debug("Data for ip %s: %s", ip, data)
 
             estado = total_reports // 5
 
@@ -295,3 +296,4 @@ class IpData:
             self.solicitudes[ip].append((element[0], element[2]))
 
         return self.solicitudes[ip]
+
