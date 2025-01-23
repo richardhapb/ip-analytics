@@ -101,7 +101,7 @@ def update_ips():
                 {"msg": "Unrecognized broker version, Kafka is running?"}, 400
             )
 
-    timeout_ms = 4000
+    timeout_ms = 1000
     count = 0
     logging.debug("Polling messages from Kafka")
     messages = kafka_instance.consumer.poll(timeout_ms=timeout_ms)
@@ -234,4 +234,5 @@ def get_ip_requests():
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 3000, True)
+
 

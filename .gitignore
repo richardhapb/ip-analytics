@@ -1,6 +1,8 @@
 .venv
 *.local
 .env
+.env.bak
+fluent-bit
 !dashboard/ip-dashboard/.env
 **/__pycache__
 **/.DS_Store

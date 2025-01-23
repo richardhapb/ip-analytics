@@ -45,7 +45,8 @@ const RequestsChart = () => {
         let ipsResponse = {data:{}}
         if (firstRequest){
            ipsResponse = await fetchIps()
-           if(Object.keys(ipsResponse.data).length === 0) {
+
+           if(ipsResponse && Object.keys(ipsResponse.data).length === 0) {
                ipsResponse = await updateIps()
            }
            setFilteredIps(ipsResponse.data)
@@ -194,3 +195,4 @@ const RequestsChart = () => {
 }
 
 export default RequestsChart
+
